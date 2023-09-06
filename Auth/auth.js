@@ -4,7 +4,6 @@ const app = express();
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 //middleware to pull apart cookie, verify token and grant access to private routes
-const cookieParser = require("cookie-parser")
 require("dotenv").config("../.env")
 
 //generate token using node then type require('crypto').randomBytes(35).toString('hex')
@@ -61,7 +60,7 @@ exports.register = async (req, res, next) => {
 
         res.status(201).json({
             message: "user successful created",
-            user: user_id,
+            user: user._id,
             role: user.role
         })
 
@@ -75,17 +74,18 @@ exports.register = async (req, res, next) => {
     }
 };
 
+
 //validate cred of existing users
 exports.login = async (req, res, next) => {
-    const { userName, password } = req.body;
-    if (!userName || !password) {
+    const { username, password } = req.body;
+    if (!username || !password) {
         res.status(401).json({
-            message: "userName and password empty",
+            message: "username and password empty",
         });
     }
     try {
         //check if userName exist in mongo
-        const user = await User.findOne({ userName });
+        const user = await User.findOne({ username });
         if (!user) {
             res.status(401).json({
                 message: "user does not exist login unsuccessful",
@@ -98,7 +98,7 @@ exports.login = async (req, res, next) => {
                 const token = jwt.sign(
                     {
                         id: user._id,
-                        userName,
+                        username,
                         role: user.role
                     },
                     secretTokenJWT,
@@ -185,3 +185,19 @@ exports.deleteUser = async (req, res, next) => {
         })
     }
 }
+
+exports.getUsers = async (req, res, next) => {
+    try {
+        const users = await User.find({});
+        const userFunction = users.map((user) => {
+            const container = {};
+            container.username = user.username;
+            container.role = user.role;
+            container.id = user._id;
+            return container;
+        });
+        res.status(200).json({ user: userFunction });
+    } catch (err) {
+        res.status(401).json({ message: "Not successful", error: err.message });
+    }
+};
