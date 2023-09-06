@@ -16,3 +16,6 @@ const UserSchema = new Mongoose.Schema({
         required: true
     }
 })
+//take in schema created and assign it to user
+const User = Mongoose.model("user", UserSchema)
+module.exports = User
